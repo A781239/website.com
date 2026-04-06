@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Taye Olutimehin Foundation | Scholarship Applications</title>
+      
+      <!-- Google Fonts -->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+      
+      <!-- Font Awesome 6 -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+      
+      <!-- Leaflet map -->
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+      <!-- Tailwind CSS -->
+      <script src="https://cdn.tailwindcss.com"></script>
+      <script>
+          tailwind.config = {
+              theme: {
+                  extend: {
+                      fontFamily: {
+                          sans: ['Outfit', 'sans-serif'],
+                      },
+                      colors: {
+                          primary: '#1e5f7a',
+                          secondary: '#002d5a',
+                          accent: '#eef4fa',
+                      }
+                  }
+              }
+          }
+      </script>
+  
+      <style>
+          /* Custom Styles & Animations */
+          body {
+              background-color: #f8fafc;
+              overflow-x: hidden;
+          }
+  
+          .page {
+              display: none;
+              animation: fadeIn 0.4s ease-out forwards;
+          }
+  
+          .page.active {
+              display: block;
+          }
+  
+          @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+          }
+  
+          /* Hero Slider */
+          .hero-slide {
+              opacity: 0;
+              transition: opacity 1s ease-in-out, transform 3s ease-in-out;
+              transform: scale(1.05);
+          }
+          .hero-slide.active {
+              opacity: 1;
+              transform: scale(1);
+          }
+  
+          /* Modal specific animations */
+          .modal-overlay {
+              opacity: 0;
+              pointer-events: none;
+              transition: opacity 0.3s ease;
+          }
+          .modal-overlay.active {
+              opacity: 1;
+              pointer-events: auto;
+          }
+          .modal-content-box {
+              transform: scale(0.95) translateY(20px);
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          .modal-overlay.active .modal-content-box {
+              transform: scale(1) translateY(0);
+          }
+  
+          /* Custom Scrollbar */
+          ::-webkit-scrollbar { width: 8px; }
+          ::-webkit-scrollbar-track { background: #f1f5f9; }
+          ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+          ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+          
+          .glass-card {
+              background: rgba(255, 255, 255, 0.9);
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+          }
+      </style>
+  </head>
+  <body class="text-slate-700 antialiased flex flex-col min-h-screen">
+  
+      <!-- Navigation -->
+      <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="flex justify-between items-center h-20">
+                  <!-- Logo -->
+                  <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" data-page="home">
+                      <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl">
+                          <i class="fas fa-graduation-cap"></i>
+                      </div>
+                      <span class="font-bold text-xl md:text-2xl text-secondary tracking-tight">Taye Olutimehin Foundation</span>
+                  </div>
+  
+                  <!-- Desktop Menu -->
+                  <div class="hidden md:flex space-x-1 lg:space-x-4 items-center">
+                      <a href="#" data-page="home" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors active">Home</a>
+                      <a href="#" data-page="about" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors">About</a>
+                      <a href="#" data-page="join" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors">Join Us</a>
+                      <a href="#" data-page="apply" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors">Apply</a>
+                      <a href="#" data-page="contact" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors">Contact</a>
+                      <a href="#" data-page="donate" class="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-secondary hover:shadow-lg transition-all transform hover:-translate-y-0.5 ml-2">Donate</a>
+                  </div>
+  
+                  <!-- Mobile Menu Button -->
+                  <div class="md:hidden flex items-center">
+                      <button id="mobile-menu-btn" class="text-slate-600 hover:text-primary focus:outline-none p-2">
+                          <i class="fas fa-bars text-2xl"></i>
+                      </button>
+                  </div>
+              </div>
+          </div>
+  
+          <!-- Mobile Menu Panel -->
+          <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-slate-100 absolute w-full">
+              <div class="px-4 pt-2 pb-4 space-y-1 shadow-lg">
+                  <a href="#" data-page="home" class="nav-link block px-3 py-3 rounded-md text-base font-medium text-primary bg-slate-50">Home</a>
+                  <a href="#" data-page="about" class="nav-link block px-3 py-3 rounded-md text-base font-medium text-slate-600 hover:text-primary hover:bg-slate-50">About</a>
+                  <a href="#" data-page="join" class="nav-link block px-3 py-3 rounded-md text-base font-medium text-slate-600 hover:text-primary hover:bg-slate-50">Join Us</a>
+                  <a href="#" data-page="apply" class="nav-link block px-3 py-3 rounded-md text-base font-medium text-slate-600 hover:text-primary hover:bg-slate-50">Apply</a>
+                  <a href="#" data-page="contact" class="nav-link block px-3 py-3 rounded-md text-base font-medium text-slate-600 hover:text-primary hover:bg-slate-50">Contact</a>
+                  <a href="#" data-page="donate" class="block mt-4 text-center bg-primary text-white px-6 py-3 rounded-xl text-base font-semibold hover:bg-secondary">Donate Now</a>
+              </div>
+          </div>
+      </nav>
+  
+      <!-- Main Content Area -->
+      <main class="flex-grow">
+          
+          <!-- HOME PAGE -->
+          <section id="home" class="page active relative">
+              <!-- Full Width Hero Slider -->
+              <div class="relative h-[90vh] md:h-[90vh] w-full overflow-hidden bg-slate-900">
+                  <div id="hero-slider" class="absolute inset-0" role="region" aria-label="Hero image slider" aria-live="polite">
+                      <div class="hero-slide active absolute inset-0">
+                          <img src="group-african-kids-classroom.jpg" class="w-full h-full object-cover opacity-60" alt="Nigerian children in classroom" />
+                      </div>
+                      <div class="hero-slide absolute inset-0">
+                          <img src="group-african-kids-classroom (1).jpg" class="w-full h-full object-cover opacity-60" alt="Nigerian children learning" />
+                      </div>
+                      <div class="hero-slide absolute inset-0">
+                          <img src="young-african-female-student-with-facemask-holding-her-textbooks-campus-area.jpg" class="w-full h-full object-cover opacity-60" alt="Young Nigerian student" />
+                      </div>
+                      <div class="hero-slide absolute inset-0">
+                          <img src="group-african-kids-paying-attention-class.jpg" class="w-full h-full object-cover opacity-60" alt="Nigerian students paying attention" />
+                      </div>
+                      <div class="hero-slide absolute inset-0">
+                          <img src="oscar-omondi-J2jdh2Wiw-8-unsplash.jpg" class="w-full h-full object-cover opacity-60" alt="Nigerian student with books" />
+                      </div>
+                  </div>
+
+                  <!-- Hero Overlay Content (now inside slideshow) -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/60 to-transparent flex items-end md:items-center z-20">
+                      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16 md:pb-20">
+                          <div class="max-w-4xl py-8 md:py-14 lg:py-16 px-4 sm:px-6 md:px-0">
+                              <span class="inline-block py-2 px-6 rounded-full bg-primary/30 text-white backdrop-blur-sm border border-white/20 text-sm font-semibold tracking-wider mb-6 uppercase">Empowering Young Minds</span>
+                              <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-6xl font-extrabold text-white leading-snug my-4 md:my-6 break-words">Building the Future </h1>
+                              <div class="space-y-6 mb-10">
+                                  <p class="text-base sm:text-lg md:text-lg text-slate-50 font-light leading-relaxed max-w-3xl">At the Taye Olutimehin Foundation, we are dedicated to supporting students with scholarships and education grants that inspire excellence and academic growth. We believe that education is the strongest tool for empowerment, and we strive to create equal opportunities for all students to reach their full potential.</p>
+                                  <p class="text-base sm:text-lg md:text-lg text-slate-50 font-light leading-relaxed max-w-3xl">Through our scholarship, bursary and training programs, we nurture talented young minds, encourage hard work, and promote a culture of learning and service. Our goal is to build a generation of educated, responsible, and visionary leaders who will contribute positively to society and the world at large.</p>
+                              </div>
+                              <div class="flex flex-col sm:flex-row gap-4 pt-4 mb-8 md:mb-12">
+                                  <button data-page="apply" class="bg-white text-secondary px-8 sm:px-10 py-3 sm:py-4 rounded-full font-bold hover:bg-slate-100 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] transform hover:scale-105 text-lg md:text-xl whitespace-nowrap">Apply for Scholarship</button>
+                                  <button data-page="donate" class="bg-primary/80 backdrop-blur-md border border-white/30 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-full font-bold hover:bg-primary transition-all transform hover:scale-105 text-lg md:text-xl whitespace-nowrap">Support Us</button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </section>
+  
+          <!-- ABOUT PAGE -->
+          <section id="about" class="page">
+              <div class="bg-secondary py-16 text-center text-white">
+                  <h1 class="text-4xl font-bold mb-4">About Us</h1>
+                  <p class="text-primary-100 max-w-2xl mx-auto opacity-90">Discover our journey, mission, and the passion driving our educational initiatives.</p>
+              </div>
+              
+              <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                  <div class="bg-white rounded-[40px] p-8 md:p-14 shadow-xl border border-slate-100 relative overflow-hidden">
+                      <!-- Decorative element -->
+                      <div class="absolute top-0 right-0 w-64 h-64 bg-accent rounded-full transform translate-x-1/2 -translate-y-1/2 opacity-50 pointer-events-none"></div>
+                      
+                      <div class="relative z-10">
+                          <div class="flex items-center gap-4 mb-8">
+                              <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-2xl">
+                                  <i class="fas fa-book-open"></i>
+                              </div>
+                              <h2 class="text-3xl font-bold text-secondary">Our Story</h2>
+                          </div>
+                          
+                          <div class="prose prose-lg text-slate-600 max-w-none space-y-6">
+                              <p>Taye Olutimehin Foundation was founded in 2023 out of passion for the less privileged, by Mr. Taye Olutimehin (FCAI) to support Nigerian youths through education.</p>
+                              
+                              <p>We have provided scholarships to almost 20 secondary and higher institution students in Abuja, Federal Capital Territory, Nigeria being our registered head office to transform lives and building a brighter future for our nation.</p>
+  
+                              <div class="bg-accent/50 border-l-4 border-primary p-6 rounded-r-2xl my-8">
+                                  <h3 class="text-xl font-bold text-secondary mb-2">Our Vision</h3>
+                                  <p class="m-0 text-slate-700 italic">"A Nigeria where every child has access to quality education regardless of their background."</p>
+                              </div>
+  
+                              <p>We believe that education is the cornerstone of personal development and national progress, and we are committed to breaking down barriers that prevent talented students from reaching their full potential.</p>
+  
+                              <p>Through strategic partnerships with educational institutions, corporate sponsors, and passionate volunteers, we continue to expand our impact and affect more lives positively each year. Our comprehensive scholarship programs cover various educational levels, from secondary school to postgraduate studies, ensuring that no deserving student is left behind due to financial constraints.</p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </section>
+  
+          <!-- JOIN US PAGE -->
+          <section id="join" class="page">
+              <div class="bg-slate-100 py-16 text-center border-b border-slate-200">
+                  <h1 class="text-4xl font-bold text-secondary mb-4">Join Us</h1>
+                  <p class="text-slate-600 max-w-2xl mx-auto">Be part of the change. Whether as a volunteer or a partner, your contribution matters.</p>
+              </div>
+  
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                  <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+                      
+                      <!-- Volunteer Card -->
+                      <div class="bg-white rounded-[30px] p-8 md:p-10 shadow-lg border border-slate-100 hover:shadow-xl transition-shadow">
+                          <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-3xl mb-6">
+                              <i class="fas fa-hands-helping"></i>
+                          </div>
+                          <h3 class="text-2xl font-bold text-secondary mb-4">Volunteer</h3>
+                          <p class="text-slate-600 mb-8">Help us make a difference in education. We need tutors, event organizers, and administrative support.</p>
+                          
+                          <form id="volunteerForm" class="space-y-4" onsubmit="event.preventDefault(); document.getElementById('volunteerSuccess').style.display='block'; this.reset();">
+                              <input type="text" placeholder="Full Name *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                              <input type="email" placeholder="Email *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                              <input type="tel" placeholder="Phone Number *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                              <select required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition appearance-none text-slate-600">
+                                  <option value="" disabled selected>Select Area of Interest *</option>
+                                  <option>Tutoring</option>
+                                  <option>Event Support</option>
+                                  <option>Administrative</option>
+                                  <option>Fundraising</option>
+                              </select>
+                              <textarea rows="4" placeholder="Tell us about your experience and why you want to volunteer" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition resize-none"></textarea>
+                              <button type="submit" class="w-full bg-primary text-white py-4 rounded-xl font-bold hover:bg-secondary transition flex justify-center items-center gap-2">
+                                  <i class="fas fa-paper-plane"></i> Submit Application
+                              </button>
+                          </form>
+                          <div id="volunteerSuccess" class="hidden mt-4 p-4 bg-green-50 text-green-700 rounded-xl text-center font-medium border border-green-200">
+                              ✅ Thank you! We'll contact you soon.
+                          </div>
+                      </div>
+  
+                      <!-- Partner Card -->
+                      <div class="bg-white rounded-[30px] p-8 md:p-10 shadow-lg border border-slate-100 hover:shadow-xl transition-shadow">
+                          <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary text-3xl mb-6">
+                              <i class="fas fa-building"></i>
+                          </div>
+                          <h3 class="text-2xl font-bold text-secondary mb-4">Partner With Us</h3>
+                          <p class="text-slate-600 mb-8">Corporate sponsors, NGOs, and schools – collaborate with us to expand our reach.</p>
+                          
+                          <form id="partnerForm" class="space-y-4" onsubmit="event.preventDefault(); document.getElementById('partnerSuccess').style.display='block'; this.reset();">
+                              <input type="text" placeholder="Organization Name *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                              <input type="email" placeholder="Contact Email *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                              <input type="tel" placeholder="Phone Number *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                              <select required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition appearance-none text-slate-600">
+                                  <option value="" disabled selected>Partnership Type *</option>
+                                  <option>Financial Sponsor</option>
+                                  <option>In-kind Donor</option>
+                                  <option>Program Partner</option>
+                                  <option>Research Partner</option>
+                              </select>
+                              <textarea rows="4" placeholder="Tell us about your organization and partnership interest" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition resize-none"></textarea>
+                              <button type="submit" class="w-full bg-secondary text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition flex justify-center items-center gap-2">
+                                  <i class="fas fa-handshake"></i> Submit Interest
+                              </button>
+                          </form>
+                          <div id="partnerSuccess" class="hidden mt-4 p-4 bg-green-50 text-green-700 rounded-xl text-center font-medium border border-green-200">
+                              ✅ Received! We'll reply within 3 working days.
+                          </div>
+                      </div>
+  
+                  </div>
+              </div>
+          </section>
+  
+          <!-- APPLY PAGE -->
+          <section id="apply" class="page">
+              <div class="bg-slate-100 py-16 text-center border-b border-slate-200">
+                  <h1 class="text-4xl font-bold text-secondary mb-4">Scholarships</h1>
+                  <p class="text-slate-600 max-w-2xl mx-auto">Select a scholarship category below to view eligibility details and apply.</p>
+              </div>
+  
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      
+                      <!-- Postgrad -->
+                      <div class="bg-white rounded-[30px] overflow-hidden shadow-lg border border-slate-100 group flex flex-col">
+                          <div class="h-56 overflow-hidden relative">
+                              <div class="absolute inset-0 bg-secondary/20 group-hover:bg-transparent transition duration-500 z-10"></div>
+                               <img src="oscar-omondi-J2jdh2Wiw-8-unsplash.jpg" alt="Vocational students applying" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                          </div>
+                          <div class="p-8 text-center flex-grow flex flex-col justify-between">
+                              <div>
+                                  <h3 class="text-2xl font-bold text-secondary mb-2">Postgraduate</h3>
+                                  <p class="text-slate-500 mb-6">Masters & PhD scholars</p>
+                              </div>
+                              <button onclick="openModal('postgraduate')" class="w-full bg-primary/10 text-primary py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition">View & Apply</button>
+                          </div>
+                      </div>
+  
+                      <!-- Undergrad -->
+                      <div class="bg-white rounded-[30px] overflow-hidden shadow-lg border border-slate-100 group flex flex-col">
+                          <div class="h-56 overflow-hidden relative">
+                              <div class="absolute inset-0 bg-secondary/20 group-hover:bg-transparent transition duration-500 z-10"></div>
+                              <div class="absolute inset-0 bg-secondary/20 group-hover:bg-transparent transition duration-500 z-10"></div>
+                              <img src="young-african-female-student-with-facemask-holding-her-textbooks-campus-area.jpg" alt="Polytechnic students applying" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                          </div>
+                          <div class="p-8 text-center flex-grow flex flex-col justify-between">
+                              <div>
+                                  <h3 class="text-2xl font-bold text-secondary mb-2">Undergraduate</h3>
+                                  <p class="text-slate-500 mb-6">University students</p>
+                              </div>
+                              <button onclick="openModal('undergraduate')" class="w-full bg-primary/10 text-primary py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition">View & Apply</button>
+                          </div>
+                      </div>
+  
+                      <!-- Secondary -->
+                      <div class="bg-white rounded-[30px] overflow-hidden shadow-lg border border-slate-100 group flex flex-col">
+                          <div class="h-56 overflow-hidden relative">
+                              <div class="absolute inset-0 bg-secondary/20 group-hover:bg-transparent transition duration-500 z-10"></div>
+                              <img src="group-african-kids-paying-attention-class.jpg" alt="Secondary students applying" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                          </div>
+                          <div class="p-8 text-center flex-grow flex flex-col justify-between">
+                              <div>
+                                  <h3 class="text-2xl font-bold text-secondary mb-2">Secondary</h3>
+                                  <p class="text-slate-500 mb-6">High school students</p>
+                              </div>
+                              <button onclick="openModal('secondary')" class="w-full bg-primary/10 text-primary py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition">View & Apply</button>
+                          </div>
+                      </div>
+  
+                      <!-- Vocational -->
+                      <div class="bg-white rounded-[30px] overflow-hidden shadow-lg border border-slate-100 group flex flex-col">
+                          <div class="h-56 overflow-hidden relative">
+                              <div class="absolute inset-0 bg-secondary/20 group-hover:bg-transparent transition duration-500 z-10"></div>
+                              <img src="medium-shot-people-measuring-wood.jpg" alt="Vocational students applying" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                          </div>
+                          <div class="p-8 text-center flex-grow flex flex-col justify-between">
+                              <div>
+                                  <h3 class="text-2xl font-bold text-secondary mb-2">Vocational</h3>
+                                  <p class="text-slate-500 mb-6">Trade & skills training</p>
+                              </div>
+                              <button onclick="openModal('vocational')" class="w-full bg-primary/10 text-primary py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition">View & Apply</button>
+                          </div>
+                      </div>
+  
+                      <!-- Polytechnic -->
+                      <div class="bg-white rounded-[30px] overflow-hidden shadow-lg border border-slate-100 group flex flex-col md:col-span-2 lg:col-span-1">
+                          <div class="h-56 overflow-hidden relative">
+                              <div class="absolute inset-0 bg-secondary/20 group-hover:bg-transparent transition duration-500 z-10"></div>
+                              <img src="young-african-female-student-with-facemask-holding-her-textbooks-campus-area.jpg" alt="Polytechnic students applying" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                          </div>
+                          <div class="p-8 text-center flex-grow flex flex-col justify-between">
+                              <div>
+                                  <h3 class="text-2xl font-bold text-secondary mb-2">Polytechnic</h3>
+                                  <p class="text-slate-500 mb-6">ND & HND programs</p>
+                              </div>
+                              <button onclick="openModal('polytechnic')" class="w-full bg-primary/10 text-primary py-3 rounded-xl font-semibold hover:bg-primary hover:text-white transition">View & Apply</button>
+                          </div>
+                      </div>
+  
+                  </div>
+              </div>
+          </section>
+  
+          <!-- DONATE PAGE -->
+          <section id="donate" class="page">
+              <div class="bg-primary py-16 text-center text-white border-b border-secondary/50">
+                  <h1 class="text-4xl font-bold mb-4">Support Our Work</h1>
+                  <p class="text-primary-100 max-w-2xl mx-auto opacity-90">Your generosity empowers the next generation of Nigerian leaders.</p>
+              </div>
+  
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                  <div class="grid lg:grid-cols-5 gap-8 lg:gap-12">
+                      
+                      <!-- Donation Form -->
+                      <div class="lg:col-span-3 bg-white rounded-[30px] p-8 md:p-10 shadow-lg border border-slate-100">
+                          <h3 class="text-2xl font-bold text-secondary mb-6 flex items-center gap-3">
+                              <i class="fas fa-credit-card text-primary"></i> Make a Donation
+                          </h3>
+                          
+                          <form id="donationForm" class="space-y-4" onsubmit="event.preventDefault(); document.getElementById('donationSuccess').style.display='block';">
+                              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                      <label for="currency" class="block mb-2 font-semibold text-slate-700">Currency</label>
+                                      <select id="currency" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                                          <option value="NGN">Naira (NGN)</option>
+                                          <option value="GBP">Pounds (GBP)</option>
+                                          <option value="USD">Dollars (USD)</option>
+                                      </select>
+                                  </div>
+                                  <div>
+                                      <label for="donationAmount" class="block mb-2 font-semibold text-slate-700">Donation Amount</label>
+                                      <div class="relative">
+                                          <span id="currencySymbol" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₦</span>
+                                          <input type="number" id="donationAmount" placeholder="Enter amount" min="1" required class="w-full pl-8 pr-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                                      </div>
+                                  </div>
+                              </div>
+
+                              <div class="grid md:grid-cols-2 gap-4">
+                                  <input type="text" placeholder="Full Name *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                                  <input type="email" placeholder="Email *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                              </div>
+                              <input type="tel" placeholder="Phone Number" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                              
+                              <div class="bg-accent rounded-2xl p-6 mt-6 border border-primary/20">
+                                  <h4 class="font-bold text-secondary mb-3 flex items-center gap-2"><i class="fas fa-university"></i> Bank Transfer Details</h4>
+                                  <div class="space-y-2 text-sm text-slate-700">
+                                      <p><span class="text-slate-500">Account Name:</span> <strong>Taye Olutimehin Foundation</strong></p>
+                                      <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200">
+                                          <span>GTBank: <strong>0123456789</strong></span>
+                                          <button type="button" class="text-primary hover:text-secondary" onclick="alert('Copied GTBank account!')"><i class="far fa-copy"></i></button>
+                                      </div>
+                                      <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200">
+                                          <span>Access Bank: <strong>1098765432</strong></span>
+                                          <button type="button" class="text-primary hover:text-secondary" onclick="alert('Copied Access Bank account!')"><i class="far fa-copy"></i></button>
+                                      </div>
+                                  </div>
+                              </div>
+  
+                              <button type="submit" class="w-full bg-secondary text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition shadow-lg mt-6">
+                                  Confirm Pledge / Donate
+                              </button>
+                          </form>
+                          <div id="donationSuccess" class="hidden mt-4 p-4 bg-green-50 text-green-700 rounded-xl text-center font-medium border border-green-200">
+                              🎉 Thank you for your generosity! A receipt will be sent to your email.
+                          </div>
+                      </div>
+  
+                      <!-- Impact Sidebar -->
+                      <div class="lg:col-span-2 space-y-8">
+                          <div class="bg-secondary text-white rounded-[30px] p-8 md:p-10 shadow-lg relative overflow-hidden">
+                              <div class="absolute -right-10 -bottom-10 opacity-10">
+                                  <i class="fas fa-chart-line text-[150px]"></i>
+                              </div>
+                    
+                          </div>
+                      </div>
+  
+                  </div>
+              </div>
+          </section>
+  
+          <!-- CONTACT PAGE -->
+          <section id="contact" class="page">
+              <div class="bg-slate-100 py-16 text-center border-b border-slate-200">
+                  <h1 class="text-4xl font-bold text-secondary mb-4">Contact Us</h1>
+                  <p class="text-slate-600 max-w-2xl mx-auto">Have questions? We'd love to hear from you.</p>
+              </div>
+  
+              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                  <div class="bg-white rounded-[40px] p-8 md:p-12 shadow-xl border border-slate-100">
+                      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20">
+                          
+                          <!-- Contact Info -->
+                          <div>
+                              <h3 class="text-3xl font-bold text-secondary mb-8">Get in Touch</h3>
+                              
+                              <div class="space-y-6">
+                                  <div class="flex gap-4 items-start">
+                                      <div class="w-12 h-12 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center text-primary text-xl">
+                                          <i class="fas fa-map-pin"></i>
+                                      </div>
+                                      <div>
+                                          <h4 class="font-bold text-secondary text-lg">Head Office</h4>
+                                          <p class="text-slate-600 leading-relaxed">Suite D10, Bobsar Complex,<br>4 Michika Street, Off Ahmadu Bello Way,<br>Area 11, Garki, Abuja, FCT, Nigeria.</p>
+                                      </div>
+                                  </div>
+  
+                                  <div class="flex gap-4 items-start">
+                                      <div class="w-12 h-12 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center text-primary text-xl">
+                                          <i class="fas fa-phone-alt"></i>
+                                      </div>
+                                      <div>
+                                          <h4 class="font-bold text-secondary text-lg">Phone</h4>
+                                          <p class="text-slate-600">Tel: +234-9-2900679</p>
+                                          <p class="text-slate-600">Mobile: +234-8155206076, +234-8033789317</p>
+                                          <p class="text-slate-600 flex items-center gap-2 mt-1"><i class="fab fa-whatsapp text-green-500"></i> WhatsApp: +234-8155206076</p>
+                                      </div>
+                                  </div>
+  
+                                  <div class="flex gap-4 items-start">
+                                      <div class="w-12 h-12 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center text-primary text-xl">
+                                          <i class="fas fa-envelope"></i>
+                                      </div>
+                                      <div>
+                                          <h4 class="font-bold text-secondary text-lg">Email</h4>
+                                          <p class="text-slate-600"><a href="mailto:TayeOlutimehinFoundation@gmail.com" class="hover:text-primary transition">TayeOlutimehinFoundation@gmail.com</a></p>
+                                          <p class="text-slate-600"><a href="mailto:info@boltagroupng.com" class="hover:text-primary transition">info@boltagroupng.com</a></p>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+  
+                          <!-- Form & Map -->
+                          <div>
+                              <form id="contactForm" class="space-y-4 mb-8" onsubmit="event.preventDefault(); document.getElementById('contactSuccess').style.display='block'; this.reset();">
+                                  <div class="grid grid-cols-2 gap-4">
+                                      <input type="text" placeholder="Your Name *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                                      <input type="email" placeholder="Your Email *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                                  </div>
+                                  <input type="text" placeholder="Subject" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition">
+                                  <textarea rows="4" placeholder="Your Message *" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition resize-none"></textarea>
+                                  <button type="submit" class="w-full bg-primary text-white py-4 rounded-xl font-bold hover:bg-secondary transition flex justify-center items-center gap-2">
+                                      <i class="fas fa-paper-plane"></i> Send Message
+                                  </button>
+                              </form>
+                              <div id="contactSuccess" class="hidden mb-6 p-4 bg-green-50 text-green-700 rounded-xl text-center font-medium border border-green-200">
+                                  ✅ Message sent! We'll respond promptly.
+                              </div>
+                              
+                              <!-- Map Container -->
+                              <div class="h-64 rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
+                                  <div id="mapContact" class="w-full h-full"></div>
+                              </div>
+                          </div>
+  
+                      </div>
+                  </div>
+              </div>
+          </section>
+  
+      </main>
+  
+      <!-- FOOTER -->
+      <footer class="bg-secondary text-slate-300 pt-16 pb-8 border-t-[8px] border-primary">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                  <div class="lg:col-span-1">
+                      <div class="flex items-center gap-2 mb-4 text-white">
+                          <i class="fas fa-graduation-cap text-2xl text-primary"></i>
+                          <span class="font-bold text-xl">Taye Olutimehin</span>
+                      </div>
+                      <p class="text-sm text-slate-400 mb-6 leading-relaxed">Empowering Nigerian youths through education, fostering growth, and building a brighter future for our nation.</p>
+                      <div class="flex space-x-4">
+                          <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors"><i class="fab fa-facebook-f"></i></a>
+                          <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors"><i class="fab fa-instagram"></i></a>
+                          <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors"><i class="fab fa-linkedin-in"></i></a>
+                      </div>
+                  </div>
+                  
+                  <div>
+                      <h4 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">Quick Links</h4>
+                      <ul class="space-y-2 text-sm">
+                          <li><a href="#" data-page="home" class="hover:text-white transition flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> Home</a></li>
+                          <li><a href="#" data-page="about" class="hover:text-white transition flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> About</a></li>
+                          <li><a href="#" data-page="join" class="hover:text-white transition flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> Join Us</a></li>
+                          <li><a href="#" data-page="apply" class="hover:text-white transition flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> Apply</a></li>
+                          <li><a href="#" data-page="donate" class="hover:text-white transition flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> Donate</a></li>
+                      </ul>
+                  </div>
+  
+                  <div>
+                      <h4 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">Programs</h4>
+                      <ul class="space-y-2 text-sm">
+                          <li><span class="text-slate-400 flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> Postgraduate Grants</span></li>
+                          <li><span class="text-slate-400 flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> Undergraduate Bursary</span></li>
+                          <li><span class="text-slate-400 flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> Secondary Scholarships</span></li>
+                          <li><span class="text-slate-400 flex items-center gap-2"><i class="fas fa-chevron-right text-[10px] text-primary"></i> Vocational Training</span></li>
+                      </ul>
+                  </div>
+  
+                  <div>
+                      <h4 class="text-white font-bold mb-4 uppercase text-sm tracking-wider">Contact</h4>
+                      <ul class="space-y-3 text-sm">
+                          <li class="flex items-start gap-3">
+                              <i class="fas fa-map-marker-alt text-primary mt-1"></i>
+                              <span>Suite D10, Bobsar Complex, 4 Michika St, Area 11, Garki, Abuja.</span>
+                          </li>
+                          <li class="flex items-center gap-3">
+                              <i class="fas fa-phone-alt text-primary"></i>
+                              <span>+234-9-2900679</span>
+                          </li>
+                          <li class="flex items-center gap-3">
+                              <i class="fas fa-envelope text-primary"></i>
+                              <span>TayeOlutimehinFoundation@gmail.com</span>
+                          </li>
+                      </ul>
+                  </div>
+              </div>
+              
+              <div class="border-t border-slate-700/50 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
+                  <p>&copy; <script>document.write(new Date().getFullYear())</script> Taye Olutimehin Foundation. All rights reserved.</p>
+                  <p class="mt-2 md:mt-0">Registered in Abuja, FCT, Nigeria.</p>
+              </div>
+          </div>
+      </footer>
+  
+      <!-- MODAL APPLICATION FORM OVERLAY -->
+      <div id="applicationModal" class="modal-overlay fixed inset-0 bg-secondary/80 backdrop-blur-sm z-[100] flex justify-center items-center p-4 overflow-y-auto">
+          <div class="modal-content-box bg-white rounded-[30px] w-full max-w-4xl max-h-[90vh] flex flex-col relative shadow-2xl">
+              <!-- Header -->
+              <div class="flex justify-between items-center p-6 border-b border-slate-100 sticky top-0 bg-white/95 backdrop-blur z-10 rounded-t-[30px]">
+                  <h2 id="modalTitle" class="text-2xl font-bold text-secondary">Application Details</h2>
+                  <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition flex items-center justify-center text-xl">
+                      <i class="fas fa-times"></i>
+                  </button>
+              </div>
+              <!-- Body -->
+              <div class="p-6 overflow-y-auto custom-scrollbar flex-grow" id="modalContent">
+                  <!-- Content injected via JS -->
+              </div>
+          </div>
+      </div>
+  
+      <script>
+          // --- Navigation Logic (SPA setup) ---
+          const pages = document.querySelectorAll('.page');
+          const navLinks = document.querySelectorAll('[data-page]');
+          const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+          const mobileMenu = document.getElementById('mobile-menu');
+  
+          function showPage(pageId) {
+              pages.forEach(p => p.classList.remove('active'));
+              document.getElementById(pageId).classList.add('active');
+              
+              navLinks.forEach(link => {
+                  link.classList.remove('text-primary', 'bg-slate-50');
+                  if(link.getAttribute('data-page') === pageId) {
+                      if(link.classList.contains('block')) { // mobile link
+                          link.classList.add('text-primary', 'bg-slate-50');
+                      } else { // desktop nav link (not donate button)
+                          if(!link.classList.contains('bg-primary')) {
+                              link.classList.add('text-primary', 'bg-slate-50');
+                          }
+                      }
+                  }
+              });
+  
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              mobileMenu.classList.add('hidden'); // Close mobile menu
+  
+              // Handle Leaflet map resize bug on hidden divs
+              if (pageId === 'contact' && map) {
+                  setTimeout(() => { map.invalidateSize(); }, 100);
+              }
+          }
+  
+          navLinks.forEach(link => {
+              link.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  showPage(link.getAttribute('data-page'));
+              });
+          });
+  
+          mobileMenuBtn.addEventListener('click', () => {
+              mobileMenu.classList.toggle('hidden');
+          });
+  
+          // --- Hero Slider Logic ---
+          const slides = document.querySelectorAll('.hero-slide');
+          let currentSlide = 0;
+  
+          function nextSlide() {
+              slides[currentSlide].classList.remove('active');
+              currentSlide = (currentSlide + 1) % slides.length;
+              slides[currentSlide].classList.add('active');
+          }
+          setInterval(nextSlide, 5000);
+  
+          // --- Donation currency/amount handling ---
+          const currencySelect = document.getElementById('currency');
+          const currencySymbol = document.getElementById('currencySymbol');
+
+          const currencySymbols = {
+              NGN: '₦',
+              GBP: '£',
+              USD: '$'
+          };
+
+          currencySelect.addEventListener('change', () => {
+              currencySymbol.textContent = currencySymbols[currencySelect.value] || '₦';
+          });
+
+          // Set initial symbol
+          currencySymbol.textContent = currencySymbols[currencySelect.value] || '₦';
+  
+  
+          // --- Leaflet Map Setup ---
+          let map;
+          function initMap() {
+              // Approx Abuja coordinates
+              map = L.map('mapContact').setView([9.05785, 7.49508], 14);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                  attribution: '© OpenStreetMap contributors'
+              }).addTo(map);
+              L.marker([9.05785, 7.49508]).addTo(map)
+                  .bindPopup('<b>Taye Olutimehin Foundation</b><br>Suite D10, Bobsar Complex, Garki.')
+                  .openPopup();
+          }
+          document.addEventListener('DOMContentLoaded', initMap);
+  
+  
+          // --- Modal Logic ---
+          const modal = document.getElementById('applicationModal');
+          const modalTitle = document.getElementById('modalTitle');
+          const modalContent = document.getElementById('modalContent');
+  
+          function openModal(type) {
+              let title = '';
+              let detailsHtml = '';
+  
+              const sharedFormFields = `
+                  <div class="mt-10 bg-slate-50 p-8 rounded-3xl border border-slate-200">
+                      <h3 class="text-2xl font-bold text-secondary mb-6 border-b border-slate-200 pb-4">Application Form</h3>
+                      <form onsubmit="event.preventDefault(); alert('Application Submitted Successfully!'); closeModal();" class="space-y-4">
+                          <div class="grid md:grid-cols-2 gap-4">
+                              <input type="text" placeholder="Full Name *" required class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none">
+                              <input type="email" placeholder="Email *" required class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none">
+                          </div>
+                          <input type="tel" placeholder="Phone Number *" required class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none">
+                          <input type="text" placeholder="Institution/School Name *" required class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none">
+                          <textarea rows="5" placeholder="Personal Statement (Tell us why you deserve this scholarship - max 500 words) *" required class="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none resize-none"></textarea>
+                          
+                          <div class="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm mt-4 border border-blue-100 flex gap-3">
+                              <i class="fas fa-info-circle mt-1"></i>
+                              <p>Note: Shortlisted candidates will be required to provide physical copies of their results and reference letters.</p>
+                          </div>
+                          
+                          <button type="submit" class="w-full bg-primary text-white py-4 rounded-xl font-bold hover:bg-secondary transition mt-6 text-lg">
+                              Submit Application
+                          </button>
+                      </form>
+                  </div>
+              `;
+  
+              if (type === 'postgraduate') {
+                  title = 'Postgraduate Scholarship Application';
+                  detailsHtml = `
+                      <div class="prose max-w-none text-slate-600 space-y-5">
+                          <p class="text-lg italic text-slate-500 border-l-4 border-primary pl-4">Our programs are designed to foster educational growth, empower young minds, and strengthen communities through consistent investment in knowledge and opportunity.</p>
+                          
+                          <p>Our postgraduate scholarship is specifically designed to pay for tuition fees, and help with living costs. The grant may cover all your expenses or just make a small but useful contribution.</p>
+                          
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Eligible Applicants</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Hold an undergraduate degree with 2:1 or higher.</li>
+                              <li>Hold a degree from a Nigerian institution.</li>
+                              <li>Either be a student at the time of application or have been registered as a student within the last five years.</li>
+                          </ul>
+
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Value</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Tuition allowances.</li>
+                              <li>Maintenance allowance.</li>
+                              <li>Further allowances for research and fieldwork expenses are paid at the discretion of the Committee.</li>
+                          </ul>
+
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Candidate Assessment</h3>
+                          <p>Candidates will be assessed on academic merit and the information provided in the application. Shortlisted candidates will be invited for an online interview.</p>
+                      </div>
+                  `;
+              } else if (type === 'undergraduate') {
+                  title = 'Undergraduate Scholarship Application';
+                  detailsHtml = `
+                      <div class="prose max-w-none text-slate-600 space-y-5">
+                          <p class="text-lg italic text-slate-500 border-l-4 border-primary pl-4">Our programs are designed to foster educational growth, empower young minds, and strengthen communities through consistent investment in knowledge and opportunity.</p>
+                          
+                          <p>Taye Olutimehin Foundation is pleased to offer a scholarship, awarded to successful applicants who are currently studying in a Federal University or State University within Nigeria.</p>
+                          
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Eligible Applicants</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Must be domiciled in Nigeria.</li>
+                              <li>Must be under the age of 25.</li>
+                              <li>Be a student at the time of application or registered within the last three years.</li>
+                              <li>Have obtained a minimum GPA of 4.0 in a 5-point system (or equivalent).</li>
+                          </ul>
+                          <p class="text-sm font-bold text-primary">*Final year undergraduates are also eligible.</p>
+
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Value</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Tuition allowance.</li>
+                              <li>Maintenance allowance per semester.</li>
+                          </ul>
+                      </div>
+                  `;
+              } else if (type === 'secondary') {
+                  title = 'Secondary School Scholarship';
+                  detailsHtml = `
+                      <div class="prose max-w-none text-slate-600 space-y-5">
+                          <p class="text-lg italic text-slate-500 border-l-4 border-primary pl-4">Catching them young and building a solid educational foundation for the leaders of tomorrow.</p>
+                          
+                          <p>This scholarship caters to bright minds in secondary schools across Nigeria, easing the burden of school fees and textbooks on parents and guardians.</p>
+                          
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Eligible Applicants</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Must be enrolled in a recognized public or private secondary school in Nigeria.</li>
+                              <li>Must provide the previous session's academic transcript showing excellent performance.</li>
+                              <li>Must provide a letter of recommendation from the school principal.</li>
+                          </ul>
+
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Value</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Tuition and books allowance per term.</li>
+                              <li>Mentorship and guidance throughout the academic year.</li>
+                          </ul>
+                      </div>
+                  `;
+              } else if (type === 'vocational') {
+                  title = 'Vocational Training Grant';
+                  detailsHtml = `
+                      <div class="prose max-w-none text-slate-600 space-y-5">
+                          <p class="text-lg italic text-slate-500 border-l-4 border-primary pl-4">Empowering youth with practical skills for financial independence and community development.</p>
+                          
+                          <p>For youths interested in learning a trade, acquiring tech skills, or entering vocational institutions.</p>
+                          
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Eligible Applicants</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Must be a Nigerian youth between 16 and 30 years old.</li>
+                              <li>Must have a verified admission/acceptance letter to a vocational/skills training center.</li>
+                          </ul>
+
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Value</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                             <li>Maintenance allowance.</li>
+                              <li>Skill acquisition tools and training fee coverage.</li>
+                          </ul>
+                      </div>
+                  `;
+              } else if (type === 'polytechnic') {
+                  title = 'Polytechnic Scholarship (ND/HND)';
+                  detailsHtml = `
+                      <div class="prose max-w-none text-slate-600 space-y-5">
+                          <p class="text-lg italic text-slate-500 border-l-4 border-primary pl-4">Supporting technical and technological education for national development.</p>
+                          
+                          <p>Open to students pursuing National Diploma (ND) and Higher National Diploma (HND) in accredited Nigerian Polytechnics.</p>
+                          
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Eligible Applicants</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Must be enrolled in an accredited Polytechnic in Nigeria.</li>
+                              <li>Maintain a minimum CGPA of 3.0 on a 4.0 scale.</li>
+                          </ul>
+
+                          <h3 class="text-xl font-bold text-secondary mt-8 mb-4">Value</h3>
+                          <ul class="list-disc pl-5 space-y-2">
+                              <li>Tuition allowance per academic session.</li>
+                               <li>Maintenance allowance.</li>
+                          </ul>
+                      </div>
+                  `;
+              }
+  
+              modalTitle.innerHTML = title;
+              modalContent.innerHTML = detailsHtml + sharedFormFields;
+              modal.classList.add('active');
+              document.body.style.overflow = 'hidden'; // Prevent background scrolling
+          }
+  
+          function closeModal() {
+              modal.classList.remove('active');
+              document.body.style.overflow = 'auto'; // Restore scrolling
+          }
+  
+          // Close modal when clicking outside
+          modal.addEventListener('click', (e) => {
+              if (e.target === modal) {
+                  closeModal();
+              }
+          });
+  
+      </script>
+  </body>
+  </html>
